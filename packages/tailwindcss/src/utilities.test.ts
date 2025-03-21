@@ -11513,7 +11513,55 @@ test('mask', async () => {
       ],
     ),
   ).toMatchInlineSnapshot(`
-    ".mask-none {
+    ".mask-\\[50\\%\\] {
+      -webkit-mask-image: 50%;
+      -webkit-mask-image: 50%;
+      mask-image: 50%;
+    }
+
+    .mask-\\[120px\\] {
+      -webkit-mask-image: 120px;
+      -webkit-mask-image: 120px;
+      mask-image: 120px;
+    }
+
+    .mask-\\[120px_120px\\] {
+      -webkit-mask-image: 120px 120px;
+      -webkit-mask-image: 120px 120px;
+      mask-image: 120px 120px;
+    }
+
+    .mask-\\[contain\\] {
+      -webkit-mask-image: contain;
+      -webkit-mask-image: contain;
+      mask-image: contain;
+    }
+
+    .mask-\\[cover\\] {
+      -webkit-mask-image: cover;
+      -webkit-mask-image: cover;
+      mask-image: cover;
+    }
+
+    .mask-\\[image\\:var\\(--some-var\\)\\] {
+      -webkit-mask-image: var(--some-var);
+      -webkit-mask-image: var(--some-var);
+      mask-image: var(--some-var);
+    }
+
+    .mask-\\[length\\:120px_120px\\], .mask-\\[position\\:120px_120px\\], .mask-\\[size\\:120px_120px\\] {
+      -webkit-mask-image: 120px 120px;
+      -webkit-mask-image: 120px 120px;
+      mask-image: 120px 120px;
+    }
+
+    .mask-\\[url\\:var\\(--some-var\\)\\], .mask-\\[var\\(--some-var\\)\\] {
+      -webkit-mask-image: var(--some-var);
+      -webkit-mask-image: var(--some-var);
+      mask-image: var(--some-var);
+    }
+
+    .mask-none {
       -webkit-mask-image: none;
       mask-image: none;
     }
@@ -11918,6 +11966,24 @@ test('mask-t-from', async () => {
       mask-composite: intersect;
     }
 
+    @property --tw-mask-linear {
+      syntax: "*";
+      inherits: false;
+      initial-value: linear-gradient(#000, #000);
+    }
+
+    @property --tw-mask-radial {
+      syntax: "*";
+      inherits: false;
+      initial-value: linear-gradient(#000, #000);
+    }
+
+    @property --tw-mask-conic {
+      syntax: "*";
+      inherits: false;
+      initial-value: linear-gradient(#000, #000);
+    }
+
     @property --tw-mask-left {
       syntax: "*";
       inherits: false;
@@ -12080,6 +12146,24 @@ test('mask-t-to', async () => {
       -webkit-mask-composite: source-in;
       -webkit-mask-composite: source-in;
       mask-composite: intersect;
+    }
+
+    @property --tw-mask-linear {
+      syntax: "*";
+      inherits: false;
+      initial-value: linear-gradient(#000, #000);
+    }
+
+    @property --tw-mask-radial {
+      syntax: "*";
+      inherits: false;
+      initial-value: linear-gradient(#000, #000);
+    }
+
+    @property --tw-mask-conic {
+      syntax: "*";
+      inherits: false;
+      initial-value: linear-gradient(#000, #000);
     }
 
     @property --tw-mask-left {
@@ -12246,6 +12330,24 @@ test('mask-r-from', async () => {
       mask-composite: intersect;
     }
 
+    @property --tw-mask-linear {
+      syntax: "*";
+      inherits: false;
+      initial-value: linear-gradient(#000, #000);
+    }
+
+    @property --tw-mask-radial {
+      syntax: "*";
+      inherits: false;
+      initial-value: linear-gradient(#000, #000);
+    }
+
+    @property --tw-mask-conic {
+      syntax: "*";
+      inherits: false;
+      initial-value: linear-gradient(#000, #000);
+    }
+
     @property --tw-mask-left {
       syntax: "*";
       inherits: false;
@@ -12408,6 +12510,24 @@ test('mask-r-to', async () => {
       -webkit-mask-composite: source-in;
       -webkit-mask-composite: source-in;
       mask-composite: intersect;
+    }
+
+    @property --tw-mask-linear {
+      syntax: "*";
+      inherits: false;
+      initial-value: linear-gradient(#000, #000);
+    }
+
+    @property --tw-mask-radial {
+      syntax: "*";
+      inherits: false;
+      initial-value: linear-gradient(#000, #000);
+    }
+
+    @property --tw-mask-conic {
+      syntax: "*";
+      inherits: false;
+      initial-value: linear-gradient(#000, #000);
     }
 
     @property --tw-mask-left {
