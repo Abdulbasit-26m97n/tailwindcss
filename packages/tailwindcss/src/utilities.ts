@@ -2865,14 +2865,6 @@ export function createUtilities(theme: Theme) {
 
     staticUtility('mask-none', [['mask-image', 'none']])
 
-    let maskPropertiesEdge = () =>
-      atRoot([
-        property('--tw-mask-left', 'linear-gradient(#000, #000)'),
-        property('--tw-mask-right', 'linear-gradient(#000, #000)'),
-        property('--tw-mask-bottom', 'linear-gradient(#000, #000)'),
-        property('--tw-mask-top', 'linear-gradient(#000, #000)'),
-      ])
-
     let maskPropertiesGradient = () =>
       atRoot([
         property('--tw-mask-linear', 'linear-gradient(#000, #000)'),
@@ -2914,6 +2906,14 @@ export function createUtilities(theme: Theme) {
      * Edge masks
      */
 
+    let maskPropertiesEdge = () =>
+      atRoot([
+        property('--tw-mask-left', 'linear-gradient(#000, #000)'),
+        property('--tw-mask-right', 'linear-gradient(#000, #000)'),
+        property('--tw-mask-bottom', 'linear-gradient(#000, #000)'),
+        property('--tw-mask-top', 'linear-gradient(#000, #000)'),
+      ])
+
     type MaskEdge = 'top' | 'right' | 'bottom' | 'left'
     type MaskStop = 'from' | 'to'
 
@@ -2945,17 +2945,17 @@ export function createUtilities(theme: Theme) {
             if (!edges[edge]) continue
 
             nodes.push(
-              atRoot([
-                property(`--tw-mask-${edge}-from`, '0%'),
-                property(`--tw-mask-${edge}-to`, '100%'),
-              ]),
-            )
-
-            nodes.push(
               decl(
                 `--tw-mask-${edge}`,
                 `linear-gradient(to ${edge}, black var(--tw-mask-${edge}-from), transparent var(--tw-mask-${edge}-to))`,
               ),
+            )
+
+            nodes.push(
+              atRoot([
+                property(`--tw-mask-${edge}-from`, '0%'),
+                property(`--tw-mask-${edge}-to`, '100%'),
+              ]),
             )
 
             nodes.push(decl(`--tw-mask-${edge}-${stop}`, value))
@@ -2994,6 +2994,15 @@ export function createUtilities(theme: Theme) {
       defaultValue: null,
       supportsNegative: false,
       supportsFractions: false,
+      handleBareValue(value) {
+        let type = inferDataType(value.value, ['integer'])
+        if (!type) return null
+        if (type !== 'integer') return null
+
+        if (!isPositiveInteger(value.value)) return null
+
+        return `calc(1deg * ${value.value})`
+      },
       handle: (value) => [
         maskPropertiesGradient(),
         maskPropertiesLinear(),
@@ -3016,11 +3025,11 @@ export function createUtilities(theme: Theme) {
         maskPropertiesLinear(),
         decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
         decl('mask-composite', 'intersect'),
-        decl('--tw-mask-linear-from', value),
         decl(
           '--tw-mask-linear',
           'linear-gradient(var(--tw-mask-linear-position), black var(--tw-mask-linear-from), transparent var(--tw-mask-linear-to))',
         ),
+        decl('--tw-mask-linear-from', value),
       ],
     })
 
@@ -3034,11 +3043,11 @@ export function createUtilities(theme: Theme) {
         maskPropertiesLinear(),
         decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
         decl('mask-composite', 'intersect'),
-        decl('--tw-mask-linear-to', value),
         decl(
           '--tw-mask-linear',
           'linear-gradient(var(--tw-mask-linear-position), black var(--tw-mask-linear-from), transparent var(--tw-mask-linear-to))',
         ),
+        decl('--tw-mask-linear-to', value),
       ],
     })
 
@@ -3113,7 +3122,6 @@ export function createUtilities(theme: Theme) {
         maskPropertiesRadial(),
         decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
         decl('mask-composite', 'intersect'),
-        decl('--tw-mask-radial', ' '),
         decl(
           '--tw-mask-radial',
           'radial-gradient(var(--tw-mask-radial-shape) var(--tw-mask-radial-size) at var(--tw-mask-radial-position), black var(--tw-mask-radial-from), transparent var(--tw-mask-radial-to))',
@@ -3132,7 +3140,6 @@ export function createUtilities(theme: Theme) {
         maskPropertiesRadial(),
         decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
         decl('mask-composite', 'intersect'),
-        decl('--tw-mask-radial', ' '),
         decl(
           '--tw-mask-radial',
           'radial-gradient(var(--tw-mask-radial-shape) var(--tw-mask-radial-size) at var(--tw-mask-radial-position), black var(--tw-mask-radial-from), transparent var(--tw-mask-radial-to))',
