@@ -2880,28 +2880,39 @@ export function createUtilities(theme: Theme) {
         property('--tw-mask-conic', 'linear-gradient(#000, #000)'),
       ])
 
-    let maskPropertiesLinear = () =>
-      atRoot([
-        property('--tw-mask-linear-position', '0deg'),
-        property('--tw-mask-linear-from', '0%'),
-        property('--tw-mask-linear-to', '100%'),
-      ])
+    /**
+     * All mask-*-*-{from,to} utilities handle bare values in the same way:
+     * - Fractions are not supported
+     * - Numbers are used as spacing multipliers
+     * - Percentages are used as is
+     */
+    function handleMaskStopBareValue(value: NamedUtilityValue) {
+      if (value.fraction) return null
 
-    let maskPropertiesRadial = () =>
-      atRoot([
-        property('--tw-mask-radial-from', '0%'),
-        property('--tw-mask-radial-to', '100%'),
-        property('--tw-mask-radial-shape', 'ellipse'),
-        property('--tw-mask-radial-size', 'farthest-corner'),
-        property('--tw-mask-radial-position', 'center'),
-      ])
+      let type = inferDataType(value.value, ['number', 'percentage'])
+      if (!type) return null
 
-    let maskPropertiesConic = () =>
-      atRoot([
-        property('--tw-mask-conic-position', '0deg'),
-        property('--tw-mask-conic-from', '0%'),
-        property('--tw-mask-conic-to', '100%'),
-      ])
+      if (type === 'number') {
+        let multiplier = theme.resolve(null, ['--spacing'])
+        if (!multiplier) return null
+        if (!isValidSpacingMultiplier(value.value)) return null
+
+        return `--spacing(${value.value})`
+      }
+
+      //
+      else if (type === 'percentage') {
+        if (!isPositiveInteger(value.value.slice(0, -1))) return null
+
+        return value.value
+      }
+
+      return null
+    }
+
+    /**
+     * Edge masks
+     */
 
     type MaskEdge = 'top' | 'right' | 'bottom' | 'left'
     type MaskStop = 'from' | 'to'
@@ -2911,32 +2922,11 @@ export function createUtilities(theme: Theme) {
         defaultValue: null,
         supportsNegative: false,
         supportsFractions: false,
-        handleBareValue(value) {
-          if (value.fraction) return null
-
-          let type = inferDataType(value.value, ['number', 'percentage'])
-          if (!type) return null
-
-          if (type === 'number') {
-            let multiplier = theme.resolve(null, ['--spacing'])
-            if (!multiplier) return null
-            if (!isValidSpacingMultiplier(value.value)) return null
-
-            return `--spacing(${value.value})`
-          }
-
-          //
-          else if (type === 'percentage') {
-            if (!isPositiveInteger(value.value.slice(0, -1))) return null
-
-            return value.value
-          }
-
-          return null
-        },
+        handleBareValue: handleMaskStopBareValue,
         handle(value) {
           let nodes: AstNode[] = [
             // Common @property declarations
+            maskPropertiesGradient(),
             maskPropertiesEdge(),
 
             // Common properties to all edge utilities
@@ -2988,6 +2978,246 @@ export function createUtilities(theme: Theme) {
     maskEdgeUtility('mask-b-to', 'to', { top: false, right: false, bottom: true, left: false })
     maskEdgeUtility('mask-l-from', 'from', { top: false, right: false, bottom: false, left: true })
     maskEdgeUtility('mask-l-to', 'to', { top: false, right: false, bottom: false, left: true })
+
+    /**
+     *  Linear Masks
+     */
+
+    let maskPropertiesLinear = () =>
+      atRoot([
+        property('--tw-mask-linear-position', '0deg'),
+        property('--tw-mask-linear-from', '0%'),
+        property('--tw-mask-linear-to', '100%'),
+      ])
+
+    functionalUtility('mask-linear', {
+      defaultValue: null,
+      supportsNegative: false,
+      supportsFractions: false,
+      handle: (value) => [
+        maskPropertiesGradient(),
+        maskPropertiesLinear(),
+        decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
+        decl('mask-composite', 'intersect'),
+        decl('--tw-mask-linear-position', ` `),
+        decl('--tw-mask-linear-position', ` `),
+        decl('--tw-mask-linear-position', value),
+        decl('--tw-mask-linear', `linear-gradient(var(--tw-mask-linear-position))`),
+      ],
+    })
+
+    functionalUtility('mask-linear-from', {
+      defaultValue: null,
+      supportsNegative: false,
+      supportsFractions: false,
+      handleBareValue: handleMaskStopBareValue,
+      handle: (value) => [
+        maskPropertiesGradient(),
+        maskPropertiesLinear(),
+        decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
+        decl('mask-composite', 'intersect'),
+        decl('--tw-mask-linear-from', value),
+        decl(
+          '--tw-mask-linear',
+          'linear-gradient(var(--tw-mask-linear-position), black var(--tw-mask-linear-from), transparent var(--tw-mask-linear-to))',
+        ),
+      ],
+    })
+
+    functionalUtility('mask-linear-to', {
+      defaultValue: null,
+      supportsNegative: false,
+      supportsFractions: false,
+      handleBareValue: handleMaskStopBareValue,
+      handle: (value) => [
+        maskPropertiesGradient(),
+        maskPropertiesLinear(),
+        decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
+        decl('mask-composite', 'intersect'),
+        decl('--tw-mask-linear-to', value),
+        decl(
+          '--tw-mask-linear',
+          'linear-gradient(var(--tw-mask-linear-position), black var(--tw-mask-linear-from), transparent var(--tw-mask-linear-to))',
+        ),
+      ],
+    })
+
+    /**
+     * Radial masks
+     */
+
+    let maskPropertiesRadial = () =>
+      atRoot([
+        property('--tw-mask-radial-from', '0%'),
+        property('--tw-mask-radial-to', '100%'),
+        property('--tw-mask-radial-shape', 'ellipse'),
+        property('--tw-mask-radial-size', 'farthest-corner'),
+        property('--tw-mask-radial-position', 'center'),
+      ])
+
+    staticUtility('mask-circle', [['--tw-mask-radial-shape', 'circle']])
+    staticUtility('mask-ellipse', [['--tw-mask-radial-shape', 'ellipse']])
+    staticUtility('mask-radial-closest-side', [['--tw-mask-radial-size', 'closest-side']])
+    staticUtility('mask-radial-farthest-side', [['--tw-mask-radial-size', 'farthest-side']])
+    staticUtility('mask-radial-closest-corner', [['--tw-mask-radial-size', 'closest-corner']])
+    staticUtility('mask-radial-farthest-corner', [['--tw-mask-radial-size', 'farthest-corner']])
+    staticUtility('mask-radial-at-top', [['--tw-mask-radial-position', 'top']])
+    staticUtility('mask-radial-at-top-left', [['--tw-mask-radial-position', 'top left']])
+    staticUtility('mask-radial-at-top-right', [['--tw-mask-radial-position', 'top right']])
+    staticUtility('mask-radial-at-bottom', [['--tw-mask-radial-position', 'bottom']])
+    staticUtility('mask-radial-at-bottom-left', [['--tw-mask-radial-position', 'bottom left']])
+    staticUtility('mask-radial-at-bottom-right', [['--tw-mask-radial-position', 'bottom right']])
+    staticUtility('mask-radial-at-left', [['--tw-mask-radial-position', 'left']])
+    staticUtility('mask-radial-at-right', [['--tw-mask-radial-position', 'right']])
+    functionalUtility('mask-radial-at', {
+      defaultValue: null,
+      supportsNegative: false,
+      supportsFractions: false,
+      handle: (value) => [decl('--tw-mask-radial-position', value)],
+    })
+
+    /*
+      This can be used to set just the size in conjunction with `mask-radial-from-*` et al,
+      or can set the whole gradient if it's the only utility you use.
+
+      For example:
+      `mask-radial-[40px_80px] mask-radial-from-50%`
+      `mask-radial-[96px_at_top,black_40%,transparent_80%,black_90%]`
+
+      This will produce nonsense though and break, which is fine:
+      `mask-radial-[96px_at_top,black_40%,transparent_80%,black_90%]  mask-radial-from-50%`
+    */
+    functionalUtility('mask-radial', {
+      defaultValue: null,
+      supportsNegative: false,
+      supportsFractions: false,
+      handle: (value) => [
+        maskPropertiesGradient(),
+        maskPropertiesRadial(),
+        decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
+        decl('mask-composite', 'intersect'),
+        decl('--tw-mask-radial-size', ' '),
+        decl('--tw-mask-radial-size', ' '),
+        decl('--tw-mask-radial-size', value),
+        decl('--tw-mask-radial', 'radial-gradient(var(--tw-mask-radial-size))'),
+      ],
+    })
+
+    functionalUtility('mask-radial-from', {
+      defaultValue: null,
+      supportsNegative: false,
+      supportsFractions: false,
+      handleBareValue: handleMaskStopBareValue,
+      handle: (value) => [
+        maskPropertiesGradient(),
+        maskPropertiesRadial(),
+        decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
+        decl('mask-composite', 'intersect'),
+        decl('--tw-mask-radial', ' '),
+        decl(
+          '--tw-mask-radial',
+          'radial-gradient(var(--tw-mask-radial-shape) var(--tw-mask-radial-size) at var(--tw-mask-radial-position), black var(--tw-mask-radial-from), transparent var(--tw-mask-radial-to))',
+        ),
+        decl('--tw-mask-radial-from', value),
+      ],
+    })
+
+    functionalUtility('mask-radial-to', {
+      defaultValue: null,
+      supportsNegative: false,
+      supportsFractions: false,
+      handleBareValue: handleMaskStopBareValue,
+      handle: (value) => [
+        maskPropertiesGradient(),
+        maskPropertiesRadial(),
+        decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
+        decl('mask-composite', 'intersect'),
+        decl('--tw-mask-radial', ' '),
+        decl(
+          '--tw-mask-radial',
+          'radial-gradient(var(--tw-mask-radial-shape) var(--tw-mask-radial-size) at var(--tw-mask-radial-position), black var(--tw-mask-radial-from), transparent var(--tw-mask-radial-to))',
+        ),
+        decl('--tw-mask-radial-to', value),
+      ],
+    })
+
+    /**
+     * Conic masks
+     */
+    let maskPropertiesConic = () =>
+      atRoot([
+        property('--tw-mask-conic-position', '0deg'),
+        property('--tw-mask-conic-from', '0%'),
+        property('--tw-mask-conic-to', '100%'),
+      ])
+
+    functionalUtility('mask-conic', {
+      defaultValue: null,
+      supportsNegative: false,
+      supportsFractions: false,
+      handleBareValue(value) {
+        let type = inferDataType(value.value, ['integer'])
+        if (!type) return null
+        if (type !== 'integer') return null
+
+        if (!isPositiveInteger(value.value)) return null
+
+        return `calc(1deg * ${value.value})`
+      },
+      handle: (value) => [
+        maskPropertiesGradient(),
+        maskPropertiesConic(),
+        decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
+        decl('mask-composite', 'intersect'),
+        decl('--tw-mask-conic-position', ' '),
+        decl('--tw-mask-conic-position', ' '),
+        decl('--tw-mask-conic-position', value),
+        decl('--tw-mask-conic', 'conic-gradient(var(--tw-mask-conic-position))'),
+      ],
+    })
+
+    functionalUtility('mask-conic-from', {
+      defaultValue: null,
+      supportsNegative: false,
+      supportsFractions: false,
+      handleBareValue: handleMaskStopBareValue,
+      handle: (value) => [
+        maskPropertiesGradient(),
+        maskPropertiesConic(),
+        decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
+        decl('mask-composite', 'intersect'),
+        decl(
+          '--tw-mask-conic',
+          'conic-gradient(from var(--tw-mask-conic-position), black var(--tw-mask-conic-from), transparent var(--tw-mask-conic-to))',
+        ),
+        decl('--tw-mask-conic-from', value),
+      ],
+    })
+
+    functionalUtility('mask-conic-to', {
+      defaultValue: null,
+      supportsNegative: false,
+      supportsFractions: false,
+      handleBareValue: handleMaskStopBareValue,
+      handle: (value) => [
+        maskPropertiesGradient(),
+        maskPropertiesConic(),
+        decl('mask-image', 'var(--tw-mask-linear), var(--tw-mask-radial), var(--tw-mask-conic)'),
+        decl('mask-composite', 'intersect'),
+        decl(
+          '--tw-mask-conic',
+          'conic-gradient(from var(--tw-mask-conic-position), black var(--tw-mask-conic-from), transparent var(--tw-mask-conic-to))',
+        ),
+        decl('--tw-mask-conic-to', value),
+      ],
+    })
+
+    functionalUtility('mask', {
+      defaultValue: null,
+      supportsNegative: false,
+      supportsFractions: false,
+      handle: (value) => [decl('mask-image', value)],
+    })
   }
 
   /**
